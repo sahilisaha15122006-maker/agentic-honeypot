@@ -63,5 +63,8 @@ def detect_scam(request: ScamRequest):
         },
         summary=summary
     )
-
+@app.get("/")
+def root():
+    return {"message": "Agentic Honeypot API is running. Visit /docs for API documentation."
+    }
         
