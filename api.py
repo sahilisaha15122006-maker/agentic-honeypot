@@ -1,3 +1,4 @@
+from fastapi import Depends
 from fastapi import FastAPI,Header,HTTPException
 from typing import Optional
 from pydantic import BaseModel
@@ -9,10 +10,13 @@ conversation_memory = {}
 
 #Create the API app(The door)
 app=FastAPI(title="Agentic Honey-Pot API")
-API_KEY="MY SECRET_API_KEY_123"
+
+API_KEY="MY_SECRET_API_KEY_123"
+
 def verify_api_key(x_api_key: Optional[str] = Header(None)):
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
+    return x_api_key
 
 #Request schema
 class ScamRequest(BaseModel):
@@ -24,13 +28,12 @@ class ScamResponse(BaseModel):
     details:dict
     summary:str
 
-@app.post("/detect-scam", response_model=ScamResponse)
+@app.post("/detect_scam", response_model=ScamResponse)
 def detect_scam(
     request: ScamRequest,
-    x_api_key: Optional[str] = Header(None)
+    api_key: str = Depends(verify_api_key)
 ):
-    if x_api_key != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API Key")
+    
     session_id = request.session_id
     message = request.message
 
@@ -58,7 +61,7 @@ def detect_scam(
     bank_accounts = re.findall(bank_pattern, message)
     phishing_links = re.findall(link_pattern, message)
 
-    # Agentic summary (persona-based)
+    # Agentic summary
     if is_scam:
         summary = "Agent identified scam intent and is continuing engagement to extract intelligence."
     else:
@@ -74,8 +77,5 @@ def detect_scam(
         },
         summary=summary
     )
-@app.get("/")
-def root():
-    return {"message": "Agentic Honeypot API is running. Visit /docs for API documentation."
-    }
+
         
