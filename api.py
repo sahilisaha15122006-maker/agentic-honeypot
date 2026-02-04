@@ -15,8 +15,8 @@ def verify_api_key(x_api_key: Optional[str] = Header(None)):
     return x_api_key
 
 class ScamRequest(BaseModel):
-    session_id: str
-    message: str
+    session_id: str | None = None
+    message: str | None = None
 
 class ScamResponse(BaseModel):
     is_scam: bool
@@ -34,9 +34,14 @@ def detect_scam_get():
 # ✅ REAL SCAM ANALYSIS
 @app.post("/detect_scam", response_model=ScamResponse)
 def detect_scam(
-    request: ScamRequest,
+    request: ScamRequest | None = None,
     api_key: str = Depends(verify_api_key)
 ):
+    if request is None or request.message is None:
+        return{
+            "status":"alive",
+            "message":"Honeypot endpoint reachable. Send JSON body for analysis."
+        }
     
     session_id = request.session_id
     message = request.message.lower()
