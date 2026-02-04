@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Header,HTTPException
+from typing import Optional
 from pydantic import BaseModel
 import re
 
@@ -8,6 +9,10 @@ conversation_memory = {}
 
 #Create the API app(The door)
 app=FastAPI(title="Agentic Honey-Pot API")
+API_KEY="MY SECRET_API_KEY_123"
+def verify_api_key(x_api_key: Optional[str] = Header(None)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
 
 #Request schema
 class ScamRequest(BaseModel):
@@ -20,7 +25,12 @@ class ScamResponse(BaseModel):
     summary:str
 
 @app.post("/detect-scam", response_model=ScamResponse)
-def detect_scam(request: ScamRequest):
+def detect_scam(
+    request: ScamRequest,
+    x_api_key: Optional[str] = Header(None)
+):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
     session_id = request.session_id
     message = request.message
 
