@@ -2,7 +2,7 @@ from fastapi import FastAPI, Header, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import re
-
+from fastapi import Body
 
 app = FastAPI(title="Agentic Honey-Pot API")
 
@@ -38,7 +38,7 @@ def health():
 # ---------------- MAIN ENDPOINT ----------------
 @app.post("/detect_scam", response_model=ScamResponse)
 def detect_scam(
-    request: Optional[ScamRequest] = None,
+    request: Optional[ScamRequest] = Body(None),
     api_key: str = Depends(verify_api_key)
 ):
     # Handle EMPTY body (important)
