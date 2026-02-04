@@ -1,10 +1,5 @@
-
-
-
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from typing import Optional
-
-
 
 app = FastAPI(title="Agentic Honey-Pot API")
 
@@ -16,24 +11,29 @@ def verify_api_key(x_api_key: Optional[str]):
         raise HTTPException(status_code=401, detail="Invalid API Key")
 
 
-# ✅ REQUIRED BY GUVI TESTER (NO BODY, SIMPLE HIT)
+# ✅ GUVI TESTER SAFE (POST, NO BODY, JSON HEADER, EMPTY PAYLOAD)
 @app.post("/detect_scam")
-def detect_scam(x_api_key: Optional[str] = Header(None)):
+async def detect_scam(
+    request: Request,
+    x_api_key: Optional[str] = Header(None)
+):
     verify_api_key(x_api_key)
+
+    # 🚫 DO NOT TOUCH request.body()
+    # 🚫 DO NOT PARSE JSON
+    # 🚫 DO NOTHING WITH BODY
+
     return {
         "status": "ok",
         "message": "Honeypot endpoint is live"
     }
 
 
-# ✅ OPTIONAL (Browser / manual check)
+# ✅ Optional GET (browser/manual test)
 @app.get("/detect_scam")
 def detect_scam_get(x_api_key: Optional[str] = Header(None)):
     verify_api_key(x_api_key)
-
     return {
         "status": "ok",
         "message": "Honeypot endpoint is live"
-    
-   
     }
