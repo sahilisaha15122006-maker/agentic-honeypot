@@ -17,6 +17,13 @@ This project provides a REST API that analyzes incoming messages and identifies 
 ## API Endpoint
 **POST** `/detect_scam`
 
+### Authentication
+
+This API uses an API key for authentication.
+
+**Demo API key (for judges/testing):**
+x-api-key: MY_SECRET_API_KEY_123
+
 **Headers**
 - `x-api-key`: API authentication key
 
