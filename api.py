@@ -28,12 +28,24 @@ class ScamResponse(BaseModel):
     details:dict
     summary:str
 
+@app.get("/detect_scam")
+def detect_scam_get():
+    return {
+        "status": "alive",
+        "message": "Honeypot endpoint is live. Use POST to analyze messages."
+    } 
+
 @app.post("/detect_scam", response_model=ScamResponse)
 def detect_scam(
-    request: ScamRequest,
+    request: Optional[ScamRequest]=None,
     api_key: str = Depends(verify_api_key)
 ):
-    
+    if request is None:
+        return ScamResponse(
+            is_scam=False,
+            details={},
+            summary="Honeypot endpoint is live.Send JSON body to analyze messages."
+        )
     session_id = request.session_id
     message = request.message
 
