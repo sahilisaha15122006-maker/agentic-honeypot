@@ -1,59 +1,52 @@
-from fastapi import FastAPI, Header, HTTPException, Depends, Body
-from typing import Optional
+from fastapi import FastAPI, Header, Depends, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 import re
 
-# --------------------
-# App setup
-# --------------------
+
 app = FastAPI(title="Agentic Honey-Pot API")
 
 API_KEY = "MY_SECRET_API_KEY_123"
 
-# In-memory storage
+
 conversation_memory = {}
 
-# --------------------
-# API Key verification
-# --------------------
+# ---------------- AUTH ----------------
 def verify_api_key(x_api_key: Optional[str] = Header(None)):
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
     return x_api_key
 
-# --------------------
-# Request / Response Models
-# --------------------
-
+# ---------------- MODELS ----------------
+class ScamRequest(BaseModel):
+    session_id: Optional[str] = "default"
+    message: Optional[str] = "health check"
 
 class ScamResponse(BaseModel):
     is_scam: bool
     details: dict
     summary: str
 
-# --------------------
-# Health check (GET)
-# --------------------
+# ---------------- HEALTH CHECK ----------------
 @app.get("/detect_scam")
-def detect_scam_get():
+def health():
     return {
         "status": "alive",
-        "message": "Honeypot endpoint is live. Use POST to analyze messages."
+        "message": "Honeypot endpoint is live"
     }
 
-# --------------------
-# Main endpoint (POST)
-# IMPORTANT: Body(None) prevents 422 error
-# --------------------
-
+# ---------------- MAIN ENDPOINT ----------------
 @app.post("/detect_scam", response_model=ScamResponse)
 def detect_scam(
-    session_id: Optional[str] = None,
-    message: Optional[str] = None,
+    request: Optional[ScamRequest] = None,
     api_key: str = Depends(verify_api_key)
 ):
-    session_id = session_id or "default"
-    message = message or ""
+    # Handle EMPTY body (important)
+    if request is None:
+        request = ScamRequest()
+
+    session_id = request.session_id or "default"
+    message = request.message or "health check"
 
     if session_id not in conversation_memory:
         conversation_memory[session_id] = []
@@ -61,8 +54,7 @@ def detect_scam(
     conversation_memory[session_id].append(message)
 
     text = message.lower()
-
-    scam_words = ["otp", "urgent", "bank", "upi", "click", "blocked", "pay"]
+    scam_words = ["otp", "urgent", "bank", "upi", "blocked", "pay", "click"]
     is_scam = any(word in text for word in scam_words)
 
     upi_ids = re.findall(r"\b\w+@\w+\b", message)
@@ -70,7 +62,7 @@ def detect_scam(
     phishing_links = re.findall(r"https?://\S+", message)
 
     summary = (
-        "Agent identified scam intent and is continuing engagement to extract intelligence."
+        "Agent identified scam intent and is engaging attacker."
         if is_scam
         else "Agent monitoring conversation."
     )
@@ -81,7 +73,7 @@ def detect_scam(
             "upi_ids": upi_ids,
             "bank_accounts": bank_accounts,
             "phishing_links": phishing_links,
-            "conversation_length": len(conversation_memory[session_id])
+            "conversation_length": len(conversation_memory[session_id]),
         },
-        summary=summary
+        summary=summary,
     )
