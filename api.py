@@ -6,6 +6,7 @@ import re
 app = FastAPI(title="Agentic Honey-Pot API")
 
 API_KEY = "MY_SECRET_API_KEY_123"
+
 conversation_memory = {}
 
 def verify_api_key(x_api_key: Optional[str] = Header(None)):
@@ -24,10 +25,10 @@ class ScamResponse(BaseModel):
 
 # ✅ THIS FIXES THE JUDGE TESTER
 @app.get("/detect_scam")
-def detect_scam_health(api_key: str = Depends(verify_api_key)):
+def detect_scam_get():
     return {
         "status": "alive",
-        "message": "Honeypot endpoint is live. Use POST to analyze messages."
+        "message": "Honeypot endpoint is live. Use POST/detect_scam with API key."
     }
 
 # ✅ REAL SCAM ANALYSIS
@@ -36,8 +37,10 @@ def detect_scam(
     request: ScamRequest,
     api_key: str = Depends(verify_api_key)
 ):
+    
     session_id = request.session_id
     message = request.message.lower()
+
 
     if session_id not in conversation_memory:
         conversation_memory[session_id] = []
